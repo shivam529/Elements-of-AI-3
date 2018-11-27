@@ -9,11 +9,11 @@
 #
 ####
 # We kept our intial,emision,transition, and  individual probabilities in dictionaries,they are:
-# Transiton:P(Si+1|Si)
-# Emission: P(Wi|Si)
-# Initial_prob: P(S1)
-# Individual: P(Si) *Note: There's a typo in dictionary name for individual probabilities,it's named "noun_prob"*
-# Transition2: P(Si|Si-1,Si-2) *Note: Used in MCMC since the Bayes' nets (figure 1c) reqires so*
+# Transiton:P(Si+1|Si) Line 23
+# Emission: P(Wi|Si) Line 25
+# Initial_prob: P(S1) Line 24
+# Individual: P(Si) Line 26  *Note: There's a typo in dictionary name for individual probabilities,it's named "noun_prob"*
+# Transition2: P(Si|Si-1,Si-2) Line 27 *Note: Used in MCMC since the Bayes' nets (figure 1c) reqires so*
 ####
 
 import random
@@ -25,9 +25,9 @@ class Solver:
     emission=dict()
     noun_prob=dict()
     transition2=dict()
-    pos_tags=['adj','adv','adp','conj','det', 'noun', 'num', 'pron', 'prt', 'verb','x','.']
+    pos_tags=['adj','adv','adp','conj','det', 'noun', 'num', 'pron', 'prt', 'verb','x','.'] ## Fixed list of POS tags used to iterate through in later stages
     ## Calculate the log of the posterior probability of a given sentence##
-    ##This function caluclates the posterior probability of Tags|words for each model and hence the probabilities are caculated according to##
+    ## This function caluclates the posterior probability of Tags|words for each model and hence the probabilities are caculated according to##
     ## the respective Bayes' Nets##
     def posterior(self, model, sentence, label):
         
@@ -41,10 +41,10 @@ class Solver:
             for i in range(len(label)):
                 if i==0:
                         pos-=-math.log(self.initial_prob.get(label[i])*self.emission.get((sentence[i],label[i]),0.000000000000001))
-                elif i==len(label)-1:
-                        pos-=-math.log(self.emission.get((sentence[i],label[i]),0.00000000000001)*self.transition.get((label[i],label[i-1]),0.000000000000001)*self.transition2.get((label[i],(label[i-1],label[i-2])),0.0000000000001))
-                elif i==len(label)-2:
-                        pos-=-math.log(self.emission.get((sentence[i],label[i]),0.00000000000001)*self.transition.get((label[i],label[i-1]),0.000000000000001)*self.transition2.get((label[i],(label[i-1],label[i-2])),0.0000000000001))
+                # elif i==len(label)-1:
+                #         pos-=-math.log(self.emission.get((sentence[i],label[i]),0.00000000000001)*self.transition.get((label[i],label[i-1]),0.000000000000001)*self.transition2.get((label[i],(label[i-1],label[i-2])),0.0000000000001))
+                # elif i==len(label)-2:
+                #         pos-=-math.log(self.emission.get((sentence[i],label[i]),0.00000000000001)*self.transition.get((label[i],label[i-1]),0.000000000000001)*self.transition2.get((label[i],(label[i-1],label[i-2])),0.0000000000001))
                         
                 else:
                         pos-=-math.log(self.emission.get((sentence[i],label[i]),0.00000000000001)*self.transition.get((label[i],label[i-1]),0.000000000000001)*self.transition2.get((label[i],(label[i-1],label[i-2])),0.0000000000001))
@@ -64,8 +64,6 @@ class Solver:
     ##### TRAINING ######
     #####Finding the required probabilities here#####
     def train(self, data):
-        print("\n-------intial--------\n")
-        print("P(S1)\n")
         
         ## P(S1) (Initial Probs) * Dictionary consists of key:values as (S1):probabalities *
         for line in data:
@@ -78,9 +76,10 @@ class Solver:
             for s in range(len(line[1])-1):
                 self.transition[(line[1][s+1],line[1][s])]=self.transition.get((line[1][s+1],line[1][s]),0)+1
         total_tran=dict() # total no. of cases where transition from Si occurs
+
         for states,v in self.transition.items():
             total_tran[states[1]]=total_tran.get(states[1],0)+v
-        self.transition={k:v/float(total_tran[k[0]]) for (k,v) in self.transition.items()}
+        self.transition={k:v/float(total_tran[k[1]]) for (k,v) in self.transition.items()}
 
         ## P(Si) (Individual states Probs)
         for line in data:
@@ -103,10 +102,9 @@ class Solver:
         den=dict()
         for line in data:
             for s in range(len(line[1])-1):
-                den[(line[1][s],line[1][s+1])]=den.get((line[1][s],line[1][s+1]),0)+1
-
+                den[(line[1][s+1],line[1][s])]=den.get((line[1][s+1],line[1][s]),0)+1 ## Total No. of cases where transition from Si+1,Si occurs
+  
         self.transition2={o:p/float(den.get(o[1],999999999999)) for (o,p) in self.transition2.items()}
-
     ## Simplified uses figure 1b from the assignment and maximimzes over all possibilites of POS tags for each word,maximxing on each on of them##
     ## Hence, probabilities used here are Indivialual state probabilities(Noun_prob)*typo*, and the emission probabilities for word|state from ##
     ## emission dictionary and if a given emission probability is not found, we assing it a very small value of 0.00000000000000001##
@@ -132,14 +130,14 @@ class Solver:
             for words in range(len(sentence)):
                 temp_tags=[]
                 for i in  range(len(self.pos_tags)):
-                    if words==0:
+                    if words==0: ## First state
                         temp_tags.append(self.initial_prob.get(self.pos_tags[i])*self.emission.get((sentence[words],self.pos_tags[i]),0.00000000000000001))
-                    elif words==len(sentence)-1:
+                    elif words==len(sentence)-1: ## Last state wont have P(Si+1|Si) and P(Si+2|Si+1,Si), hence special case##
                         temp_tags.append(self.emission.get((sentence[words],self.pos_tags[i]),0.00000000000000001)*self.transition.get((self.pos_tags[i],intial_tags[words-1]),0.00000000000000001)*self.transition2.get((self.pos_tags[i],(intial_tags[words-1],intial_tags[words-2])),0.00000000000000001))
-                    elif words==len(sentence)-2:
+                    elif words==len(sentence)-2: ## Special case again, wont have P(Si+2|Si+1,Si)
                         temp_tags.append(self.emission.get((sentence[words],self.pos_tags[i]),0.00000000000000001)*self.transition.get((self.pos_tags[i],intial_tags[words-1]),0.00000000000000001)*self.transition2.get((self.pos_tags[i],(intial_tags[words-1],intial_tags[words-2])),0.00000000000000001)*self.transition.get((intial_tags[words+1],self.pos_tags[i]),0.00000000000000001))
                         
-                    else:
+                    else: ## All the middle states
                         temp_tags.append(self.emission.get((sentence[words],self.pos_tags[i]),0.00000000000000001)*self.transition.get((self.pos_tags[i],intial_tags[words-1]),0.00000000000000001)*self.transition2.get((self.pos_tags[i],(intial_tags[words-1],intial_tags[words-2])),0.00000000000000001)*self.transition2.get((intial_tags[words+2],(intial_tags[words+1],self.pos_tags[i])),0.00000000000000001)*self.transition.get((intial_tags[words+1],self.pos_tags[i]),0.00000000000000001))
                      
 
@@ -149,13 +147,13 @@ class Solver:
                 tag=np.random.choice(['adj','adv','adp','conj','det', 'noun', 'num', 'pron', 'prt', 'verb','x','.'], 1, p=norm)
                 final_tags.append(tag[0])
             intial_tags=final_tags
-            check.append(final_tags)
+            check.append(final_tags) ## list of tags for every sentence through every iteration to be checked for convergence using this list
             if(iterations>100): ## skipping first 100 iterations and then checkin for convergence
                 ctr=0
                 for items in check[-5:]:
                     if final_tags==items:
                         ctr+=1
-                if(ctr>=4): :## if last list of tags are same, its converged so break##
+                if(ctr>=4): ## if last list of tags are same, its converged so break##
                     break
         return intial_tags
        
@@ -197,7 +195,6 @@ class Solver:
                     ret.append(values)
                     temp_state=values
                     break
-        print(len(ret))  
         ret.reverse()
         return ret
     
