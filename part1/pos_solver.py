@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 ###################################
 # CS B551 Fall 2018, Assignment #3
 #
