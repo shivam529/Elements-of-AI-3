@@ -44,10 +44,10 @@ class Solver:
                 elif i==len(label)-1:
                         pos-=-math.log(self.emission.get((sentence[i],label[i]),0.00000000000001)*self.transition.get((label[i],label[i-1]),0.000000000000001)*self.transition2.get((label[i],(label[i-1],label[i-2])),0.0000000000001))
                 elif i==len(label)-2:
-                        pos-=-math.log(self.emission.get((sentence[i],label[i]),0.00000000000001)*self.transition.get((label[i],label[i-1]),0.000000000000001)*self.transition2.get((label[i],(label[i-1],label[i-2])),0.0000000000001)*self.transition.get((label[i+1],label[i]),0.00000000000001))
+                        pos-=-math.log(self.emission.get((sentence[i],label[i]),0.00000000000001)*self.transition.get((label[i],label[i-1]),0.000000000000001)*self.transition2.get((label[i],(label[i-1],label[i-2])),0.0000000000001))
                         
                 else:
-                        pos-=-(self.emission.get((sentence[i],label[i]),0.00000000000001)*self.transition.get((label[i],label[i-1]),0.000000000000001)*self.transition2.get((label[i],(label[i-1],label[i-2])),0.0000000000001)*self.transition2.get((label[i+2],(label[i+1],label[i])),0.0000000000001)*self.transition.get((label[i+1],label[i]),0.00000000000001))
+                        pos-=-math.log(self.emission.get((sentence[i],label[i]),0.00000000000001)*self.transition.get((label[i],label[i-1]),0.000000000000001)*self.transition2.get((label[i],(label[i-1],label[i-2])),0.0000000000001))
                      
             return pos
         elif model == "HMM":
@@ -155,7 +155,7 @@ class Solver:
                 for items in check[-5:]:
                     if final_tags==items:
                         ctr+=1
-                if(ctr>=4):## if last list of tags are same, its converged so break##
+                if(ctr>=4): :## if last list of tags are same, its converged so break##
                     break
         return intial_tags
        
