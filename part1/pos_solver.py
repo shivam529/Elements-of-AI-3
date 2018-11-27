@@ -3,7 +3,7 @@
 # CS B551 Fall 2018, Assignment #3
 #
 # Your names and user ids:
-##Shivam Thakur(spthakur),Sanket Patole(sspatole),Taj tanveer shaikh(tajsahik)
+##Shivam Thakur(spthakur),Sanket Patole(sspatole),Taj tanveer shaikh(tajshaik)
 # (Based on skeleton code by D. Crandall)
 #
 #
