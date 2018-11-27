@@ -3,7 +3,7 @@
 # ./ocr.py : Perform optical character recognition, usage:
 #     ./ocr.py train-image-file.png train-text.txt test-image-file.png
 # 
-# Authors: (insert names here)
+# Authors: Shivam Thakur(spthakur),Sanket Patole(sspatole),Taj Tanveer Shaikh(Taj shaik)
 # (based on skeleton code by D. Crandall, Oct 2018)
 #
 
