@@ -155,7 +155,7 @@ class Solver:
                 for items in check[-5:]:
                     if final_tags==items:
                         ctr+=1
-                if(ctr>=4):
+                if(ctr>=4):## if last list of tags are same, its converged so break##
                     break
         return intial_tags
        
