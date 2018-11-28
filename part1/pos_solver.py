@@ -154,12 +154,12 @@ class Solver:
                 final_tags.append(tag[0])
             intial_tags=final_tags
             check.append(final_tags) ## list of tags for every sentence through every iteration to be checked for convergence using this list
-            if(iterations>50): ## skipping first 100 iterations and then checkin for convergence
+            if(iterations>50): ## skipping first 50 iterations and then checkin for convergence
                 ctr=0
                 for items in check[-5:]:
                     if final_tags==items:
                         ctr+=1
-                if(ctr>=4): ## if last list of tags are same, its converged so break##
+                if(ctr>=4): ## if last 4 list of tags are same, its converged so break##
                     
                     
                     break
