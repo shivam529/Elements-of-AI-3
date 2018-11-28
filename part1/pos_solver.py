@@ -3,7 +3,7 @@
 # CS B551 Fall 2018, Assignment #3
 #
 # Your names and user ids:
-##Shivam Thakur(spthakur),Sanket Patole(sspatole),Taj tanveer shaikh(tajshaik)
+##Shivam Thakur(spthakur),Sanket Patole(sspatole),Taj tanveer shaikh(tajsahik)
 # (Based on skeleton code by D. Crandall)
 #
 #
@@ -20,6 +20,8 @@ import random
 import math
 import numpy as np
 class Solver:
+    
+    c=0.0
     transition=dict()
     initial_prob=dict()
     emission=dict()
@@ -34,29 +36,27 @@ class Solver:
         if model == "Simple":
             pos=0.0
             for i in range(len(label)):
-                pos-=-math.log(self.emission.get((sentence[i],label[i]),0.000000000000001))-math.log(self.noun_prob.get(label[i]))
+                pos+=math.log(self.emission.get((sentence[i],label[i]),0.000000000000001))+math.log(self.noun_prob.get(label[i]))
             return pos
         elif model == "Complex":
             pos=0.0
             for i in range(len(label)):
                 if i==0:
-                        pos-=-math.log(self.initial_prob.get(label[i])*self.emission.get((sentence[i],label[i]),0.000000000000001))
-                # elif i==len(label)-1:
-                #         pos-=-math.log(self.emission.get((sentence[i],label[i]),0.00000000000001)*self.transition.get((label[i],label[i-1]),0.000000000000001)*self.transition2.get((label[i],(label[i-1],label[i-2])),0.0000000000001))
-                # elif i==len(label)-2:
-                #         pos-=-math.log(self.emission.get((sentence[i],label[i]),0.00000000000001)*self.transition.get((label[i],label[i-1]),0.000000000000001)*self.transition2.get((label[i],(label[i-1],label[i-2])),0.0000000000001))
-                        
+                        pos+=math.log(self.initial_prob.get(label[i])*(self.emission.get((sentence[i],label[i]),0.000000000000001)))
+                elif i==1:
+                     pos+=math.log(self.emission.get((sentence[i],label[i]),0.00000000000001)*self.transition.get((label[i],label[i-1]),0.000000000000001))
+
                 else:
-                        pos-=-math.log(self.emission.get((sentence[i],label[i]),0.00000000000001)*self.transition.get((label[i],label[i-1]),0.000000000000001)*self.transition2.get((label[i],(label[i-1],label[i-2])),0.0000000000001))
+                        pos+=math.log(self.emission.get((sentence[i],label[i]),0.00000000000001)*self.transition.get((label[i],label[i-1]),0.000000000000001)*self.transition2.get((label[i],(label[i-1],label[i-2])),0.0000000000001))
                      
             return pos
         elif model == "HMM":
             pos=0.0
             for i in range(len(label)):
                 if i==0:
-                    pos-=-math.log(self.emission.get((sentence[i],label[i]),0.0000000000001))-math.log(self.initial_prob.get(label[i]))
+                    pos+=math.log(self.emission.get((sentence[i],label[i]),0.0000000000001))+math.log(self.initial_prob.get(label[i]))
                 else:
-                    pos-=-math.log(self.emission.get((sentence[i],label[i]),0.0000000000001))-math.log(self.transition.get((label[i],label[i-1])))
+                    pos+=math.log(self.emission.get((sentence[i],label[i]),0.0000000000001))+math.log(self.transition.get((label[i],label[i-1]),0.0000000000000001))
             return pos
         else:
             print("Unknown algo!")
@@ -80,6 +80,7 @@ class Solver:
         for states,v in self.transition.items():
             total_tran[states[1]]=total_tran.get(states[1],0)+v
         self.transition={k:v/float(total_tran[k[1]]) for (k,v) in self.transition.items()}
+        # print("tr",self.transition)
 
         ## P(Si) (Individual states Probs)
         for line in data:
@@ -95,6 +96,7 @@ class Solver:
                 self.emission[(line[0][s],line[1][s])]=self.emission.get((line[0][s],line[1][s]),0)+1
         self.emission={k:v/float(noun_count[k[1]]) for (k,v) in self.emission.items()}
 
+
         ##P(Si+2|Si+1,Si) (TRANSITION PROBABILITIIES for states given previous two states)
         for line in data:
             for s in range(len(line[1])-2):
@@ -103,8 +105,10 @@ class Solver:
         for line in data:
             for s in range(len(line[1])-1):
                 den[(line[1][s+1],line[1][s])]=den.get((line[1][s+1],line[1][s]),0)+1 ## Total No. of cases where transition from Si+1,Si occurs
-  
+
+        
         self.transition2={o:p/float(den.get(o[1],999999999999)) for (o,p) in self.transition2.items()}
+       
     ## Simplified uses figure 1b from the assignment and maximimzes over all possibilites of POS tags for each word,maximxing on each on of them##
     ## Hence, probabilities used here are Indivialual state probabilities(Noun_prob)*typo*, and the emission probabilities for word|state from ##
     ## emission dictionary and if a given emission probability is not found, we assing it a very small value of 0.00000000000000001##
@@ -124,7 +128,7 @@ class Solver:
     def complex_mcmc(self, sentence):
         intial_tags=[ "noun"]*len(sentence)
         check=[]
-        for iterations in range(500):
+        for iterations in range(200):
             final_tags=[]
             
             for words in range(len(sentence)):
@@ -136,7 +140,9 @@ class Solver:
                         temp_tags.append(self.emission.get((sentence[words],self.pos_tags[i]),0.00000000000000001)*self.transition.get((self.pos_tags[i],intial_tags[words-1]),0.00000000000000001)*self.transition2.get((self.pos_tags[i],(intial_tags[words-1],intial_tags[words-2])),0.00000000000000001))
                     elif words==len(sentence)-2: ## Special case again, wont have P(Si+2|Si+1,Si)
                         temp_tags.append(self.emission.get((sentence[words],self.pos_tags[i]),0.00000000000000001)*self.transition.get((self.pos_tags[i],intial_tags[words-1]),0.00000000000000001)*self.transition2.get((self.pos_tags[i],(intial_tags[words-1],intial_tags[words-2])),0.00000000000000001)*self.transition.get((intial_tags[words+1],self.pos_tags[i]),0.00000000000000001))
-                        
+                    # elif words==1:
+                    #     temp_tags.append(self.emission.get((sentence[words],self.pos_tags[i]),0.00000000000000001)*self.transition.get((self.pos_tags[i],intial_tags[words-1]),0.00000000000000001)*self.transition2.get((intial_tags[words+2],(intial_tags[words+1],self.pos_tags[i])),0.00000000000000001)*self.transition.get((intial_tags[words+1],self.pos_tags[i]),0.00000000000000001))
+
                     else: ## All the middle states
                         temp_tags.append(self.emission.get((sentence[words],self.pos_tags[i]),0.00000000000000001)*self.transition.get((self.pos_tags[i],intial_tags[words-1]),0.00000000000000001)*self.transition2.get((self.pos_tags[i],(intial_tags[words-1],intial_tags[words-2])),0.00000000000000001)*self.transition2.get((intial_tags[words+2],(intial_tags[words+1],self.pos_tags[i])),0.00000000000000001)*self.transition.get((intial_tags[words+1],self.pos_tags[i]),0.00000000000000001))
                      
@@ -148,12 +154,14 @@ class Solver:
                 final_tags.append(tag[0])
             intial_tags=final_tags
             check.append(final_tags) ## list of tags for every sentence through every iteration to be checked for convergence using this list
-            if(iterations>100): ## skipping first 100 iterations and then checkin for convergence
+            if(iterations>50): ## skipping first 100 iterations and then checkin for convergence
                 ctr=0
                 for items in check[-5:]:
                     if final_tags==items:
                         ctr+=1
                 if(ctr>=4): ## if last list of tags are same, its converged so break##
+                    
+                    
                     break
         return intial_tags
        
@@ -212,3 +220,4 @@ class Solver:
             return self.hmm_viterbi(sentence)
         else:
             print("Unknown algo!")
+        
